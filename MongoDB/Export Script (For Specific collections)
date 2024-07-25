@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Array of collections to export
+collections=(
+  "Collection1",
+  "Collection2"
+)
+# MongoDB Atlas connection parameters
+ATLAS_URI="mongodb+srv://username:password@cluster.mongodb.net/"
+DB_NAME="name-of-database"  # Replace with your database name
+
+# Create a date-stamped directory
+DATE=$(date +%Y%m%d)
+OUTPUT_DIR="././name_of_folder-backup-json_$DATE"
+
+# Ensure the output directory exists
+mkdir -p $OUTPUT_DIR
+
+# Loop through collections and perform mongoexport on each
+for collection in "${collections[@]}"
+do
+    echo "Exporting collection: $collection"
+    mongoexport --uri="$ATLAS_URI" --db="$DB_NAME" --collection="$collection" --out="$OUTPUT_DIR/$collection.json" --jsonArray
+done
+
+echo "MongoDB export completed."
