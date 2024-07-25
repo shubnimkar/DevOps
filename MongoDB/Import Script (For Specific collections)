@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Array of collections to import
+collections=(
+"Collection1",
+"Collection2"
+)
+
+# MongoDB Atlas connection parameters
+ATLAS_URI="mongodb+srv://username:password@cluster.mongodb.net/"
+DB_NAME="name-of-database"  # Replace with your database name
+
+# Directory containing the exported JSON files
+DATE=$(date +%Y%m%d)
+INPUT_DIR="./name_of_folder-backup-json_$DATE"
+
+# Loop through collections and drop each one
+for collection in "${collections[@]}"
+do
+    echo "Dropping collection: $collection"
+    mongosh "$ATLAS_URI" --eval "db.getSiblingDB('$DB_NAME').$collection.drop()"
+done
+
+# Loop through collections and perform mongoimport on each
+for collection in "${collections[@]}"
+do
+    echo "Importing collection: $collection"
+    mongoimport --uri="$ATLAS_URI" --db="$DB_NAME" --collection="$collection" --file="$INPUT_DIR/$collection.json" --jsonArray
+done
+
+echo "MongoDB import completed."
