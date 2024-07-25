@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # Array of collections to dump
-collections=("Name of collection1"
-, "collection2")
+collections=(
+"collection1",
+"collection2")
 
 # MongoDB Atlas connection parameters
 ATLAS_URI="mongodb+srv://username:password0@cluster.mongodb.net/"
