@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Array of collections to dump
+collections=("Name of collection1"
+, "collection2")
+
+# MongoDB Atlas connection parameters
+ATLAS_URI="mongodb+srv://username:password0@cluster.mongodb.net/"
+DB_NAME="name-of-database"  # Replace with your database name
+
+# Create a date-stamped directory
+DATE=$(date +%Y%m%d)
+OUTPUT_DIR="./name_of_folder-backup-dump_$DATE"
+
+# Ensure the output directory exists
+mkdir -p $OUTPUT_DIR
+
+# Loop through collections and perform mongodump on each
+for collection in "${collections[@]}"
+do
+    echo "Dumping collection: $collection"
+    mongodump --uri "$ATLAS_URI" --db $DB_NAME --collection $collection --out $OUTPUT_DIR
+done
+
+echo "MongoDB dump completed."
