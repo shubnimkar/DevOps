@@ -52,4 +52,3 @@ function sendApprovalRequest(e) {
     htmlBody: body
   });
 }
-
