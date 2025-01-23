@@ -65,4 +65,3 @@ function notifyDevOps(row) {
     body: body
   });
 }
-
