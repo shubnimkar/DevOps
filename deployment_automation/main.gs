@@ -80,7 +80,7 @@ var body = `
     <tr><th>Phabricator Link</th><td>${formattedPhabLinks}</td></tr>
     <tr><th>Target URL</th><td><a href="${targetURL}" target="_blank">${targetURL}</a></td></tr>
   </table>
-  <p>Please click below to approve or reject the request:</p>
+  <p>Please click below to approve or reject the request</p>
   <div style="text-align: center;">
     <a href="${approvalLink}" class="btn btn-success" 
        style="background-color: #28a745; color: #fff; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-block;">
