@@ -35,6 +35,7 @@ function doGet(e) {
   return HtmlService.createHtmlOutput(responseHtml);
 }
 
+
 // Function to notify DevOps Team after approval
 function notifyDevOps(row) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Form responses 1");
@@ -60,104 +61,91 @@ function notifyDevOps(row) {
   // Email body with inline CSS for compatibility
   var body = `
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deployment Approval</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 20px;
-            padding: 0;
-            background-color: #f5f5f5;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        th,
-        td {
-            border: 1px solid #ddd;
-            padding: 10px;
-        }
-        th {
-            background-color: #e8e8e8;
-            color: #333;
-            font-weight: bold;
-        }
-        .approval-message {
-            margin-top: 20px;
-            text-align: center;
-        }
-        .approval-message td {
-            background-color: #f5f5f5;
-            color: #333;
-            font-size: 20px;
-            font-weight: bold;
-            padding: 15px;
-            border-radius: 8px 8px 0 0;
-        }
-        a {
-            text-decoration: none;
-            color: #666;
-        }
-    </style>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: 20px;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    a {
+      text-decoration: none;
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      border-radius: 5px;
+    }
+    .btn-success {
+      background-color: #28a745; /* Green */
+      color: #fff; /* White */
+    }
+    .btn-danger {
+      background-color: #dc3545; /* Red */
+      color: #fff; /* White */
+    }
+    .approval-message {
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      color: #155724;
+      background: #d4edda;
+      padding: 15px;
+      border-radius: 8px 8px 0 0;
+    }
+    .footer {
+      text-align: center;
+      font-size: 14px;
+      font-weight: bold;
+      color: #333;
+      margin-top: 20px;
+    }
+  </style>
 </head>
 <body>
-    <table width="100%" cellpadding="5" cellspacing="0">
-        <tr>
-            <td class="approval-message">
-                ✅ Deployment Approved
-            </td>
-        </tr>
-        <tr>
-            <td style="padding: 20px; font-size: 14px; color: #333;">
-                <p>Hello DevOps Team,</p>
-                <p>The deployment request for the following project has been <strong>approved</strong> by <strong>${approver}</strong>.</p>
-
-                <table width="100%" cellpadding="5" cellspacing="0">
-                    <tr>
-                        <th>Project</th>
-                        <td>${projectName}</td>
-                    </tr>
-                    <tr>
-                        <th>Environment</th>
-                        <td>${environment}</td>
-                    </tr>
-                    <tr>
-                        <th>Deployment Tags</th>
-                        <td>${deploymentTags}</td>
-                    </tr>
-                    <tr>
-                        <th>Repository</th>
-                        <td>${repoDetails}</td>
-                    </tr>
-                    <tr>
-                        <th>Changes</th>
-                        <td>${description}</td>
-                    </tr>
-                    <tr>
-                        <th>Phabricator Link</th>
-                        <td>${formattedPhabLinks}</td>
-                    </tr>
-                    <tr>
-                        <th>Target URL</th>
-                        <td><a href="${targetURL}" target="_blank">${targetURL}</a>
-                    </tr>
-                </table>
-
-                <p style="text-align: center; font-size: 12px; color: #666; margin-top: 20px;">
-                    Best,<br>
-                    Deployment System
-                </p>
-            </td>
-        </tr>
-    </table>
+  <table>
+    <tr>
+      <td class="approval-message">✅ Deployment Approved</td>
+    </tr>
+    <tr>
+      <td style="padding: 20px; font-size: 14px; color: #333;">
+        <p>Hello DevOps Team,</p>
+        <p>The deployment request for the following project has been <strong>approved</strong> by <strong>${approver}</strong>.</p>
+        <table>
+          <tr><th>Project</th><td>${projectName}</td></tr>
+          <tr><th>Environment</th><td>${environment}</td></tr>
+          <tr><th>Deployment Tags</th><td>${deploymentTags}</td></tr>
+          <tr><th>Repository</th><td>${repoDetails}</td></tr>
+          <tr><th>Changes</th><td>${description}</td></tr>
+          <tr><th>Phabricator Link</th><td>${formattedPhabLinks}</td></tr>
+          <tr><th>Target URL</th><td><a href="${targetURL}" target="_blank">${targetURL}</a></td></tr>
+        </table>
+        <p class="footer">Best,<br>Deployment System</p>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
+
   `;
 
   // Send email
@@ -167,4 +155,3 @@ function notifyDevOps(row) {
     htmlBody: body
   });
 }
-
