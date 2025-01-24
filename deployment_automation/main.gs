@@ -81,23 +81,22 @@ var body = `
     <tr><th>Target URL</th><td><a href="${targetURL}" target="_blank">${targetURL}</a></td></tr>
   </table>
   <p>Please click below to approve or reject the request:</p>
-  <p>
-  <a href="${approvalLink}" class="btn btn-success" 
-     style="background-color: #28a745; color: #fff; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-block;">
-    Approve
-  </a>
-  | 
-  <a href="${rejectLink}" class="btn btn-danger" 
-     style="background-color: #dc3545; color: #fff; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-block;">
-    Reject
-  </a>
-</p>
+  <div style="text-align: center;">
+    <a href="${approvalLink}" class="btn btn-success" 
+       style="background-color: #28a745; color: #fff; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-block;">
+      Approve
+    </a>
+    | 
+    <a href="${rejectLink}" class="btn btn-danger" 
+       style="background-color: #dc3545; color: #fff; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-block;">
+      Reject
+    </a>
+  </div>
 
   <p>Best,<br>Deployment System</p>
   
 </body>
-</html>
-`;
+</html>`;
   
   // Sending email notification to Rutuja and Vaibhav
   MailApp.sendEmail({
