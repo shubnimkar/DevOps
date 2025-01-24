@@ -1,35 +1,38 @@
 function doGet(e) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Form responses 1");
-  
-  // Get parameters from the URL
   var action = e.parameter.action;
   var row = parseInt(e.parameter.row, 10);
 
   if (!row || row < 2) {
-    return ContentService.createTextOutput("Invalid request.");
+    return HtmlService.createHtmlOutput("<h3>Invalid request.</h3>");
   }
 
-  var approver = Session.getActiveUser().getEmail(); // Captures who is approving/rejecting
+  var approver = Session.getActiveUser().getEmail();
   var approvalStatus = (action === "approve") ? "Approved" : "Rejected";
 
-  // Ensure the columns 14, 15, and 16 exist in the sheet
   var lastColumn = sheet.getLastColumn();
-  
   if (lastColumn < 16) {
-    return ContentService.createTextOutput("Sheet is not properly structured.");
+    return HtmlService.createHtmlOutput("<h3>Sheet is not properly structured.</h3>");
   }
 
-  // Update approval status, approver's email, and timestamp in the specified columns (14, 15, and 16)
-  sheet.getRange(row, 14).setValue(approvalStatus);  // Column 14 for approval status
-  sheet.getRange(row, 15).setValue(approver);        // Column 15 for approver's email
-  sheet.getRange(row, 16).setValue(new Date());      // Column 16 for approval timestamp
+  sheet.getRange(row, 14).setValue(approvalStatus);
+  sheet.getRange(row, 15).setValue(approver);
+  sheet.getRange(row, 16).setValue(new Date());
 
-  // Notify the DevOps Team if Approved
   if (action === "approve") {
     notifyDevOps(row);
   }
 
-  return ContentService.createTextOutput(`Deployment ${approvalStatus} successfully.`);
+  var responseHtml = `
+    <html>
+      <head><title>Deployment Status</title></head>
+      <body style="text-align: center; font-family: Arial;">
+        <h2>Deployment ${approvalStatus} Successfully</h2>
+        <p>Thank you, ${approver}, for your response.</p>
+      </body>
+    </html>`;
+  
+  return HtmlService.createHtmlOutput(responseHtml);
 }
 
 // Function to notify DevOps Team after approval
