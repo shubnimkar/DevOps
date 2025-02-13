@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Deployment Document Upload</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      text-align: center;
+    }
+    #uploadSection {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Deployment Document Upload</h2>
+
+  <!-- Dropdown to select a pending deployment -->
+  <label for="deploymentList"><b>Select Deployment:</b></label>
+  <select id="deploymentList"></select>
+
+  <div id="uploadSection">
+    <h3>Upload Deployment Document</h3>
+    <input type="file" id="fileInput">
+    <button onclick="uploadDocument()">Upload</button>
+  </div>
+
+  <div id="status"></div>
+
+  <script>
+    // Load pending deployments on page load
+    document.addEventListener("DOMContentLoaded", loadPendingDeployments);
+
+    function loadPendingDeployments() {
+      google.script.run.withSuccessHandler(function(deployments) {
+        var select = document.getElementById("deploymentList");
+        select.innerHTML = ""; // Clear existing options
+
+        if (deployments.length === 0) {
+          select.innerHTML = "<option value=''>No pending deployments</option>";
+          return;
+        }
+
+        deployments.forEach(function(deployment) {
+          var option = document.createElement("option");
+          option.value = deployment.row; // Store row number
+          option.textContent = deployment.project + " (" + deployment.environment + ")";
+          select.appendChild(option);
+        });
+      }).getPendingDeployments();
+    }
+
+    function uploadDocument() {
+      var fileInput = document.getElementById("fileInput");
+      var selectedDeployment = document.getElementById("deploymentList").value;
+      var statusDiv = document.getElementById("status");
+
+      if (!selectedDeployment) {
+        statusDiv.innerHTML = "<p style='color: red;'>Please select a deployment.</p>";
+        return;
+      }
+
+      if (fileInput.files.length === 0) {
+        statusDiv.innerHTML = "<p style='color: red;'>Please select a file to upload.</p>";
+        return;
+      }
+
+      var file = fileInput.files[0];
+      var reader = new FileReader();
+
+      reader.onload = function(event) {
+        var fileData = event.target.result.split(',')[1]; // Get Base64 data
+        google.script.run.withSuccessHandler(function(response) {
+          statusDiv.innerHTML = "<p style='color: green;'>Upload successful!</p>";
+          loadPendingDeployments(); // Refresh pending deployments
+        }).uploadDeploymentDocument(selectedDeployment, file.name, fileData);
+      };
+
+      reader.readAsDataURL(file);
+    }
+  </script>
+</body>
+</html>
