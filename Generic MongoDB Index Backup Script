@@ -1,0 +1,83 @@
+from pymongo import MongoClient
+import json
+import logging
+
+# Configure logging for clear output
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# =========================================================================
+# ⚠️ CONFIGURATION - EDIT THESE VALUES
+# =========================================================================
+# MongoDB Connection String (e.g., 'mongodb://localhost:27017/')
+CLIENT_STRING = 'mongodb+srv://<USERNAME>:<PASSWORD>@<CLUSTER_ADDRESS>/'
+DATABASE_NAME = 'your_database_name'
+BACKUP_FILE = 'indexes_backup.json'
+# List of collections whose indexes you want to backup
+COLLECTIONS_TO_BACKUP = ['collection A', 'collection B', 'collection C']
+# =========================================================================
+
+def backup_indexes():
+    """Connects to MongoDB, retrieves index definitions for specified collections, and saves them to a JSON file."""
+    
+    client = None
+    try:
+        # 1. ESTABLISH CONNECTION
+        client = MongoClient(CLIENT_STRING)
+        db = client[DATABASE_NAME]
+        logging.info(f"Connected to MongoDB database: {DATABASE_NAME}")
+
+        index_backup_data = {}
+
+        # 2. ITERATE AND EXTRACT INDEXES
+        print("\n" + "="*40)
+        print("STARTING INDEX BACKUP")
+        print("="*40)
+        
+        for collection_name in COLLECTIONS_TO_BACKUP:
+            logging.info(f"\nProcessing collection: {collection_name}")
+            collection = db[collection_name]
+            
+            # Get the list of all indexes for the current collection
+            indexes = collection.list_indexes()
+            collection_indexes = {}
+            
+            index_count = 0
+            for index in indexes:
+                # Convert the index document (a BSON document) to a standard Python dictionary
+                index_doc = index.to_dict()
+                
+                # In PyMongo, the 'key' field is an array of tuples (e.g., [('_id', 1)])
+                # Convert it to a list of lists so it serializes cleanly to JSON
+                # The restoration script handles converting this back to the expected format.
+                index_doc['key'] = list(index_doc['key'])
+                
+                index_name = index_doc['name']
+                collection_indexes[index_name] = index_doc
+                index_count += 1
+            
+            index_backup_data[collection_name] = collection_indexes
+            logging.info(f"  Extracted {index_count} index(es) from '{collection_name}'.")
+
+
+        # 3. WRITE TO JSON FILE
+        print("\n" + "="*40)
+        print("WRITING TO BACKUP FILE")
+        print("="*40)
+        
+        with open(BACKUP_FILE, 'w') as f:
+            # Use indent=4 for human-readable formatting
+            json.dump(index_backup_data, f, indent=4)
+            
+        logging.info(f"✅ Successfully backed up index definitions to: '{BACKUP_FILE}'")
+
+    except Exception as e:
+        logging.critical(f"A critical error occurred during the backup process: {e}")
+        
+    finally:
+        # 4. CLEANUP
+        if client:
+            client.close()
+            logging.info("MongoDB client connection closed.")
+
+if __name__ == '__main__':
+    backup_indexes()
