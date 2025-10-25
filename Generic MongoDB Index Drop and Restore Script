@@ -1,0 +1,121 @@
+from pymongo import MongoClient
+from pymongo.errors import OperationFailure, DuplicateKeyError
+import json
+import logging
+
+# Configure logging for clear output
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# =========================================================================
+# ⚠️ CONFIGURATION - EDIT THESE VALUES
+# =========================================================================
+# MongoDB Connection String (e.g., 'mongodb://localhost:27017/')
+CLIENT_STRING = 'mongodb+srv://<USERNAME>:<PASSWORD>@<CLUSTER_ADDRESS>/' 
+DATABASE_NAME = 'your_database_name'
+INDEXES_FILE = 'indexes_backup.json'
+# List of collections you want to drop indexes on and then restore them
+COLLECTIONS_TO_PROCESS = ['collection_A', 'collection_B', 'collection_C']
+# =========================================================================
+
+def drop_and_restore_indexes():
+    """Drops all non-default indexes and restores from a backup file."""
+    
+    # 1. ESTABLISH CONNECTION AND LOAD DATA
+    # ------------------------------------
+    try:
+        client = MongoClient(CLIENT_STRING)
+        db = client[DATABASE_NAME]
+        logging.info(f"Connected to MongoDB database: {DATABASE_NAME}")
+
+        # Load index_info from the file
+        with open(INDEXES_FILE, 'r') as f:
+            index_info = json.load(f)
+        logging.info(f"Loaded index backup from: {INDEXES_FILE}")
+
+    except Exception as e:
+        logging.critical(f"A critical setup error occurred (connection or file load): {e}")
+        return
+    
+    print("\n" + "="*50)
+    print("PHASE 1: DROPPING EXISTING INDEXES")
+    print("="*50)
+    
+    # 2. PHASE 1: DROP ALL NON-DEFAULT INDEXES
+    # ----------------------------------------
+    for collection_name in COLLECTIONS_TO_PROCESS:
+        if collection_name not in db.list_collection_names():
+            logging.warning(f"Collection '{collection_name}' not found in database. Skipping drop phase.")
+            continue
+            
+        logging.info(f"\nProcessing collection: {collection_name}")
+        collection = db[collection_name]
+        
+        try:
+            existing_indexes = collection.list_indexes()
+            dropped_count = 0
+            
+            for index in existing_indexes:
+                index_name = index['name']
+                
+                # Skip the mandatory primary key index
+                if index_name == '_id_':
+                    continue
+                
+                # Drop the index
+                collection.drop_index(index_name)
+                logging.info(f"  ✅ Dropped index: '{index_name}'")
+                dropped_count += 1
+
+            if dropped_count == 0:
+                logging.info(f"  No non-_id indexes found to drop.")
+
+        except OperationFailure as e:
+            logging.error(f"  ❌ Failed to drop indexes on '{collection_name}': {e}")
+
+
+    print("\n" + "="*50)
+    print("PHASE 2: RESTORING INDEXES FROM BACKUP")
+    print("="*50)
+
+    # 3. PHASE 2: RESTORE INDEXES FROM BACKUP FILE
+    # --------------------------------------------
+    for collection_name, indexes in index_info.items():
+        if collection_name in COLLECTIONS_TO_PROCESS:
+            logging.info(f"\nRestoring indexes for collection: {collection_name}")
+            
+            for index_name, index_details in indexes.items():
+                
+                # Skip the default _id index
+                if index_name == '_id_':
+                    continue
+
+                keys = index_details['key']
+                # Prepare options, ensuring 'name' is explicitly set
+                options = {k: v for k, v in index_details.items() if k != 'key'}
+                options['name'] = index_name 
+                
+                try:
+                    # Create the index
+                    db[collection_name].create_index(keys, **options)
+                    logging.info(f"  🎉 Restored index: '{index_name}'")
+
+                except DuplicateKeyError:
+                    logging.warning(f"  ⚠️ Skipped unique index '{index_name}' due to duplicate key constraint violation in data.")
+                
+                except OperationFailure as e:
+                    logging.error(f"  ❌ Failed to restore index '{index_name}': {e}")
+                
+                except Exception as e:
+                    logging.error(f"  ❌ An unexpected error occurred while restoring index '{index_name}': {e}")
+                    
+    print("\n" + "="*50)
+    print("✅ Index drop and restoration process complete.")
+    print("="*50)
+
+    # 4. CLEANUP
+    # ----------
+    client.close()
+    logging.info("MongoDB client connection closed.")
+
+if __name__ == '__main__':
+    drop_and_restore_indexes()
